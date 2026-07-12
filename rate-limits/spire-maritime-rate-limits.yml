@@ -1,0 +1,67 @@
+specification: API Commons Rate Limits
+specificationVersion: '0.1'
+schema: https://raw.githubusercontent.com/api-evangelist/interface-research/main/schema/api-commons.yml#/$defs/RateLimits
+provider: Spire Maritime
+providerId: spire-maritime
+created: '2026-07-12'
+modified: '2026-07-12'
+reconciled: false
+tags:
+- Vessel Tracking
+- AIS
+- Maritime
+- GraphQL
+- Rate Limiting
+- Quotas
+- Throttling
+description: >-
+  The Spire Maritime 2.0 GraphQL API applies a per-token request quota
+  documented as up to 60 requests per minute per token (burst 60). Each GraphQL
+  response reports remaining quota under extensions.requestQuota with a limit
+  string (e.g. "60 req/m (burst 60)") and a remaining count. The raw TCP AIS
+  stream is a continuous push feed rather than a per-request API, so it is
+  governed by contract throughput/coverage rather than an RPM limit. Exact
+  contractual limits vary by agreement.
+notes: >-
+  The 60 req/min GraphQL figure is from Spire Maritime 2.0 documentation; verify
+  the current quota and any per-plan overrides in a Spire/Kpler agreement on
+  reconciliation. Result-page size for vessels is up to 1,000 nodes per page;
+  message pages can be up to ~20,000 messages.
+sources:
+- https://documentation.spire.com/maritime-2-0/
+- https://documentation.spire.com/tcp-stream-v2/using-the-tcp-stream/
+responseCodes:
+  throttled: 429
+limits:
+- name: GraphQL Requests Per Minute
+  scope: token
+  metric: requests
+  limit: 60 per minute (burst 60)
+  notes: >-
+    Reported per-response in extensions.requestQuota (limit, remaining).
+    Documented default; may vary by agreement.
+- name: Vessels Page Size
+  scope: request
+  metric: records
+  limit: up to 1000 vessels per page
+  notes: Cursor pagination via first / after (pageInfo.endCursor, hasNextPage).
+- name: Messages Page Size
+  scope: request
+  metric: records
+  limit: up to ~20000 messages per page
+  notes: Historical/recent AIS message retrieval by MMSI + time range.
+- name: TCP AIS Stream Throughput
+  scope: account
+  metric: messages
+  limit: contract-defined
+  notes: >-
+    Continuous push stream (not per-request). Governed by licensed coverage and
+    throughput; server-side cursor resumes after brief disconnects.
+policies:
+- name: Quota Reporting
+  description: GraphQL responses expose remaining quota inline via extensions.requestQuota so clients can self-throttle.
+- name: Backoff Strategy
+  description: Clients should implement exponential backoff with jitter on 429 responses and honor any Retry-After.
+maintainers:
+- FN: Kin Lane
+  email: kin@apievangelist.com

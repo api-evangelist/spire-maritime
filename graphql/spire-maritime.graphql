@@ -1,0 +1,367 @@
+"""
+Spire Maritime 2.0 GraphQL Schema (representative SDL)
+
+Endpoint: https://api.spire.com/graphql
+Auth:     Authorization: Bearer <token>
+
+Grounding & honesty note
+------------------------
+This SDL is grounded in Spire Maritime's public Maritime 2.0 documentation and
+the official spireglobal/maritime Postman collection. The `vessels` query, its
+filter arguments, the VesselConnection / Vessel / VesselStaticData /
+LastPositionUpdate / Voyage / VesselCharacteristics shapes, the pageInfo /
+totalCount pagination, the ShipType enum, and the port / matchedPort /
+portEvents* queries are CONFIRMED from those sources (exact field names quoted
+where documented).
+
+The `messages` query and `predictedVesselRoute` query, and some leaf scalar
+choices (e.g. custom scalars IMO / MMSI / UNLOCODE / DateTime), are
+REPRESENTATIVE - modeled from documented behavior (Spire's Messages API returns
+paginated AIS messages by MMSI + time range; the Routing API returns a
+predicted route/ETA from origin, destination, and vessel) but not published as
+a full SDL by the provider. Real-time AIS is delivered over a separate raw TCP
+stream (NMEA 0183), NOT via a GraphQL subscription - so no Subscription type is
+defined here.
+
+NOTE: Following Spire Maritime's acquisition by Kpler, this API is being
+migrated/discontinued; the post-migration endpoint is https://api.sml.kpler.com/graphql.
+"""
+
+# ─────────────────────────────────────────────
+# Custom scalars
+# ─────────────────────────────────────────────
+
+scalar DateTime
+scalar IMO
+scalar MMSI
+scalar UNLOCODE
+
+# ─────────────────────────────────────────────
+# Enums (CONFIRMED from Maritime 2.0 docs)
+# ─────────────────────────────────────────────
+
+enum AisClass {
+  A
+  B
+}
+
+enum AisAccuracy {
+  HIGH
+  LOW
+}
+
+enum PositionCollectionType {
+  DYNAMIC
+  SATELLITE
+  TERRESTRIAL
+}
+
+enum ResultCountRelation {
+  EQUAL
+  LOWER_OR_EQUAL
+}
+
+enum ShipType {
+  ANTI_POLLUTION
+  CAR_CARRIER
+  COMBINATION_CARRIER
+  CONTAINER
+  DIVE_VESSEL
+  DREDGER
+  DRY_BULK
+  FISHING
+  GAS_CARRIER
+  GENERAL_CARGO
+  GENERAL_TANKER
+  HIGH_SPEED_CRAFT
+  LAW_ENFORCEMENT
+  LIVESTOCK
+  LNG_CARRIER
+  MEDICAL_TRANS
+  MILITARY_OPS
+  OFFSHORE
+  OTHER
+  PASSENGER
+  PILOT_VESSEL
+  PLEASURE_CRAFT
+  PORT_TENDER
+  REEFER
+  ROLL_ON_ROLL_OFF
+  SAILING
+  SEARCH_AND_RESCUE
+  SPECIAL_CRAFT
+  TANKER_CHEMICALS
+  TANKER_CRUDE
+  TANKER_PRODUCT
+  TUG
+  VEHICLE_PASSENGER
+}
+
+"State filter for port events (representative)."
+enum PortEventState {
+  ARRIVAL
+  DEPARTURE
+  BERTH
+  ANCHORAGE
+}
+
+# ─────────────────────────────────────────────
+# Input types
+# ─────────────────────────────────────────────
+
+"A time range filter with inclusive bounds (RFC 3339 timestamps)."
+input TimeRange {
+  startTime: DateTime
+  endTime: DateTime
+}
+
+"Area-of-interest polygon filter. Supply GeoJSON or WKT (CONFIRMED)."
+input AreaOfInterest {
+  geoJson: String
+  wkt: String
+}
+
+"Origin/destination point for predicted routing (representative)."
+input RoutePoint {
+  latitude: Float
+  longitude: Float
+  unlocode: UNLOCODE
+}
+
+# ─────────────────────────────────────────────
+# Core object types
+# ─────────────────────────────────────────────
+
+type PageInfo {
+  endCursor: String
+  hasNextPage: Boolean!
+}
+
+type ResultCount {
+  relation: ResultCountRelation
+  value: Int!
+}
+
+type GeoPoint {
+  latitude: Float
+  longitude: Float
+}
+
+type VesselDimensions {
+  a: Int
+  b: Int
+  c: Int
+  d: Int
+  length: Int
+  width: Int
+}
+
+type VesselStaticData {
+  aisClass: AisClass
+  callsign: String
+  dimensions: VesselDimensions
+  flag: String
+  imo: IMO
+  mmsi: MMSI
+  name: String
+  shipType: ShipType
+  shipSubType: String
+  timestamp: DateTime
+  updateTimestamp: DateTime
+}
+
+type LastPositionUpdate {
+  accuracy: AisAccuracy
+  collectionType: PositionCollectionType
+  course: Float
+  heading: Float
+  latitude: Float
+  longitude: Float
+  maneuver: String
+  navigationalStatus: String
+  rot: Float
+  speed: Float
+  timestamp: DateTime
+  updateTimestamp: DateTime
+}
+
+type MatchedPort {
+  matchScore: Float!
+  port: Port
+}
+
+type Voyage {
+  destination: String
+  draught: Float
+  eta: DateTime
+  matchedPort: MatchedPort
+  timestamp: DateTime
+  updateTimestamp: DateTime
+}
+
+"Extended vessel characteristics (subset; CONFIRMED groups)."
+type VesselCharacteristics {
+  basic: VesselCharacteristicsBasic
+}
+
+type VesselCharacteristicsBasic {
+  capacity: VesselCapacity
+  history: VesselHistory
+  vesselTypeAndTrading: VesselTypeAndTrading
+}
+
+type VesselCapacity {
+  deadweight: Int
+  grossTonnage: Int
+  netTonnage: Int
+  teu: Int
+}
+
+type VesselHistory {
+  builtYear: Int
+  shipBuilder: String
+  registeredOwner: String
+}
+
+type VesselTypeAndTrading {
+  vesselSubtype: String
+}
+
+type Vessel {
+  id: ID!
+  updateTimestamp: DateTime
+  staticData: VesselStaticData!
+  lastPositionUpdate: LastPositionUpdate
+  currentVoyage: Voyage
+  characteristics: VesselCharacteristics
+}
+
+type VesselConnection {
+  pageInfo: PageInfo!
+  totalCount: ResultCount!
+  nodes: [Vessel!]!
+}
+
+type Port {
+  name: String!
+  unlocode: UNLOCODE!
+  centerPoint: GeoPoint
+}
+
+type PortMatch {
+  matchScore: Float!
+  port: Port
+}
+
+# ── Port events (CONFIRMED queries; representative event shape) ──
+
+type PortEvent {
+  id: ID!
+  eventType: PortEventState
+  timestamp: DateTime
+  vessel: VesselStaticData
+  port: Port
+}
+
+type PortEventConnection {
+  pageInfo: PageInfo!
+  totalCount: ResultCount!
+  nodes: [PortEvent!]!
+}
+
+# ── AIS messages (REPRESENTATIVE) ──
+
+type AisMessage {
+  mmsi: MMSI
+  msgType: Int
+  collectionType: PositionCollectionType
+  latitude: Float
+  longitude: Float
+  speed: Float
+  course: Float
+  heading: Float
+  navigationalStatus: String
+  timestamp: DateTime
+  createTimestamp: DateTime
+}
+
+type MessageConnection {
+  pageInfo: PageInfo!
+  totalCount: ResultCount!
+  nodes: [AisMessage!]!
+}
+
+# ── Predicted route / ETA (REPRESENTATIVE) ──
+
+type PredictedVesselRoute {
+  distance: Float
+  eta: DateTime
+  durationHours: Float
+  route: String
+}
+
+# ─────────────────────────────────────────────
+# Query root
+# ─────────────────────────────────────────────
+
+type Query {
+  "Retrieve vessels with static, position, voyage, and characteristics data."
+  vessels(
+    after: String
+    first: Int = 100
+    areaOfInterest: AreaOfInterest
+    callsign: [String!]
+    flag: [String!]
+    imo: [IMO!]
+    lastPositionUpdate: TimeRange
+    mmsi: [MMSI!]
+    name: [String!]
+    shipType: [ShipType!]
+  ): VesselConnection!
+
+  "Paginated decoded AIS messages filtered by MMSI and time range (representative)."
+  messages(
+    after: String
+    first: Int = 20000
+    mmsi: [MMSI!]
+    receivedTime: TimeRange
+  ): MessageConnection!
+
+  "Live/historical port events for a specific vessel."
+  portEventsByVessel(
+    mmsi: MMSI
+    imo: IMO
+    eventState: [PortEventState!]
+    after: String
+    first: Int = 100
+  ): PortEventConnection!
+
+  "Port events by geographic location."
+  portEventsByLocation(
+    areaOfInterest: AreaOfInterest
+    eventState: [PortEventState!]
+    after: String
+    first: Int = 100
+  ): PortEventConnection!
+
+  "Port events by ship type."
+  portEventsByShipType(
+    shipType: [ShipType!]
+    eventState: [PortEventState!]
+    after: String
+    first: Int = 100
+  ): PortEventConnection!
+
+  "Get port data by UNLOCODE."
+  port(unlocode: UNLOCODE!): Port
+
+  "Resolve a free-text port string to a matched port (with score)."
+  matchedPort(text: String!): [PortMatch!]!
+
+  "Predicted route, distance, and ETA between origin and destination (representative)."
+  predictedVesselRoute(
+    origin: RoutePoint!
+    destination: RoutePoint!
+    vessel: MMSI!
+  ): PredictedVesselRoute
+}

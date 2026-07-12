@@ -1,0 +1,33 @@
+generated: '2026-07-12'
+method: documented
+source: https://documentation.spire.com/maritime-2-0/
+summary:
+  types:
+  - http
+  - token
+schemes:
+- name: bearer_token
+  type: http
+  scheme: bearer
+  bearerFormat: token
+  in: header
+  headerName: Authorization
+  note: >-
+    GraphQL requests to https://api.spire.com/graphql carry an
+    'Authorization: Bearer <token>' header. Tokens are issued to
+    contract customers (enterprise / contact-sales).
+  sources:
+  - https://documentation.spire.com/maritime-2-0/
+  - https://github.com/spireglobal/maritime/blob/main/spire-graphql-postman-collection.json
+- name: tcp_stream_token
+  type: token
+  scheme: token
+  in: stream
+  note: >-
+    The raw TCP AIS stream (streamingv2.ais.spire.com:56784) authenticates by
+    sending the authorization token on the socket after connecting; the same
+    account token authorizes both GraphQL and the TCP stream. This is NOT an
+    HTTP Authorization header - it is an application-layer token exchange over
+    the TCP socket.
+  sources:
+  - https://documentation.spire.com/tcp-stream-v2/using-the-tcp-stream/

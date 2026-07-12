@@ -1,0 +1,194 @@
+{
+  "info": {
+    "name": "Spire Maritime 2.0 (GraphQL)",
+    "description": "GraphQL requests for the Spire Maritime 2.0 API (https://api.spire.com/graphql). Auth: Authorization: Bearer {{spire_maritime_token}}. Queries grounded in Spire Maritime 2.0 docs and the official spireglobal/maritime Postman collection; the messages and predictedVesselRoute bodies are representative. NOTE: following the Kpler acquisition the endpoint is migrating to https://api.sml.kpler.com/graphql.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{spire_maritime_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://api.spire.com/graphql"
+    },
+    {
+      "key": "spire_maritime_token",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Vessels",
+      "item": [
+        {
+          "name": "Vessels by MMSI list",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}",
+              "host": ["{{baseUrl}}"]
+            },
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query Vessels($mmsi: [MMSI!], $first: Int) {\n  vessels(mmsi: $mmsi, first: $first) {\n    pageInfo { hasNextPage endCursor }\n    totalCount { relation value }\n    nodes {\n      id\n      updateTimestamp\n      staticData { name mmsi imo callsign flag shipType aisClass dimensions { length width } }\n      lastPositionUpdate { latitude longitude speed course heading collectionType timestamp }\n      currentVoyage { destination draught eta matchedPort { port { name unlocode } } timestamp }\n    }\n  }\n}",
+                "variables": "{\n  \"mmsi\": [\"244660000\"],\n  \"first\": 100\n}"
+              }
+            }
+          }
+        },
+        {
+          "name": "Vessels in an area of interest (polygon)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}",
+              "host": ["{{baseUrl}}"]
+            },
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query VesselsInAOI($aoi: AreaOfInterest, $shipType: [ShipType!], $first: Int) {\n  vessels(areaOfInterest: $aoi, shipType: $shipType, first: $first) {\n    pageInfo { hasNextPage endCursor }\n    nodes {\n      staticData { name mmsi shipType }\n      lastPositionUpdate { latitude longitude timestamp collectionType }\n    }\n  }\n}",
+                "variables": "{\n  \"aoi\": { \"wkt\": \"POLYGON((-122.5 37.7,-122.3 37.7,-122.3 37.9,-122.5 37.9,-122.5 37.7))\" },\n  \"shipType\": [\"CONTAINER\"],\n  \"first\": 1000\n}"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Messages (representative)",
+      "item": [
+        {
+          "name": "Recent AIS messages by MMSI + time range",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}",
+              "host": ["{{baseUrl}}"]
+            },
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query Messages($mmsi: [MMSI!], $range: TimeRange, $first: Int) {\n  messages(mmsi: $mmsi, receivedTime: $range, first: $first) {\n    pageInfo { hasNextPage endCursor }\n    nodes { mmsi msgType latitude longitude speed course timestamp collectionType }\n  }\n}",
+                "variables": "{\n  \"mmsi\": [\"244660000\"],\n  \"range\": { \"startTime\": \"2026-07-11T00:00:00Z\", \"endTime\": \"2026-07-12T00:00:00Z\" },\n  \"first\": 20000\n}"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Port Events",
+      "item": [
+        {
+          "name": "Port events by vessel",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}",
+              "host": ["{{baseUrl}}"]
+            },
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query PortEventsByVessel($mmsi: MMSI, $first: Int) {\n  portEventsByVessel(mmsi: $mmsi, first: $first) {\n    pageInfo { hasNextPage endCursor }\n    nodes { id eventType timestamp port { name unlocode } }\n  }\n}",
+                "variables": "{\n  \"mmsi\": \"244660000\",\n  \"first\": 100\n}"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ports",
+      "item": [
+        {
+          "name": "Port by UNLOCODE",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}",
+              "host": ["{{baseUrl}}"]
+            },
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query Port($unlocode: UNLOCODE!) {\n  port(unlocode: $unlocode) {\n    name\n    unlocode\n    centerPoint { latitude longitude }\n  }\n}",
+                "variables": "{\n  \"unlocode\": \"DEHAM\"\n}"
+              }
+            }
+          }
+        },
+        {
+          "name": "Match port by text",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}",
+              "host": ["{{baseUrl}}"]
+            },
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query MatchedPort($text: String!) {\n  matchedPort(text: $text) {\n    matchScore\n    port { name unlocode centerPoint { latitude longitude } }\n  }\n}",
+                "variables": "{\n  \"text\": \"JEDDAH S ARABIA\"\n}"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Predicted ETA / Routing (representative)",
+      "item": [
+        {
+          "name": "Predicted vessel route",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}",
+              "host": ["{{baseUrl}}"]
+            },
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query PredictedRoute($origin: RoutePoint!, $destination: RoutePoint!, $vessel: MMSI!) {\n  predictedVesselRoute(origin: $origin, destination: $destination, vessel: $vessel) {\n    distance\n    eta\n    durationHours\n    route\n  }\n}",
+                "variables": "{\n  \"origin\": { \"unlocode\": \"CNSHA\" },\n  \"destination\": { \"unlocode\": \"NLRTM\" },\n  \"vessel\": \"244660000\"\n}"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+specification: API Commons Plans
+specificationVersion: '0.1'
+schema: https://raw.githubusercontent.com/api-evangelist/interface-research/main/schema/api-commons.yml#/$defs/Plans
+provider: Spire Maritime
+providerId: spire-maritime
+created: '2026-07-12'
+modified: '2026-07-12'
+reconciled: false
+tags:
+- Vessel Tracking
+- AIS
+- Maritime
+- Satellite AIS
+- Ship Tracking
+- Plans
+description: >-
+  Spire Maritime does not publish a public, self-service price list. Access to
+  the Maritime 2.0 GraphQL API, the AIS TCP stream, Port Events, Predicted ETA /
+  Routing, and historical AIS data extracts is sold through commercial
+  agreements (contact sales). Scope is typically defined by which data products
+  and coverage a customer licenses, request volume / rate on the GraphQL API,
+  and stream throughput, rather than a per-token public tier. No dollar figures
+  are published, so none are asserted here.
+notes: >-
+  Contact-sales / enterprise only. Following Spire Maritime's acquisition by
+  Kpler, commercial terms are handled via Kpler (cs@kpler.com,
+  developers.kpler.com). Values below are structural placeholders, not quoted
+  prices; reconcile against a Spire/Kpler sales quote.
+sources:
+- https://spire.com/maritime/
+- https://documentation.spire.com/maritime-2-0/
+- https://spire.com/maritime/contact/
+plans:
+- id: spire-maritime-enterprise
+  name: Enterprise / Contact Sales
+  type: enterprise
+  description: >-
+    Negotiated commercial agreement covering the licensed Spire Maritime data
+    products (vessels, messages, port events, predicted ETA, historical
+    extracts) and delivery channels (GraphQL API and/or raw TCP AIS stream),
+    with agreed request/throughput scope and support terms.
+  entries:
+  - label: Maritime Data License
+    name: enterprise_agreement
+    type: flat
+    metric: contract
+    limit: -1
+    timeFrame: year
+    geo: global
+    unit: 1
+    price: contact sales
+    userMultiplied: false
+  elements:
+  - name: Maritime 2.0 GraphQL API (Vessels, Messages, Port Events)
+  - name: Predicted ETA / Routing API
+  - name: Real-Time AIS TCP Stream
+  - name: Historical AIS Data Extracts
+  - name: Satellite + Terrestrial AIS Coverage
+maintainers:
+- FN: Kin Lane
+  email: kin@apievangelist.com

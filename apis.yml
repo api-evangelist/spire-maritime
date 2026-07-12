@@ -1,0 +1,164 @@
+aid: spire-maritime
+url: https://raw.githubusercontent.com/api-evangelist/spire-maritime/refs/heads/main/apis.yml
+name: Spire Maritime
+kind: company
+description: >-
+  Spire Maritime (Spire Global) delivers satellite and terrestrial AIS vessel
+  data - global ship positions, static vessel characteristics, voyage and
+  destination data, port events, and predicted ETAs. The flagship Maritime 2.0
+  service is GraphQL-first at a single endpoint (https://api.spire.com/graphql,
+  Bearer token auth), with a separate raw-TCP AIS stream for real-time message
+  delivery in NMEA 0183 format. Access is enterprise / contact-sales. NOTE -
+  following Spire Maritime's acquisition by Kpler, these APIs are being
+  migrated/discontinued; new integrations are directed to developers.kpler.com.
+image: https://kinlane-images.s3.amazonaws.com/shared/apis-json/apis-json-logo.jpg
+tags:
+- Vessel Tracking
+- AIS
+- Maritime
+- Satellite AIS
+- Ship Tracking
+- Real-Time Data
+- Maritime Data
+- Predicted ETA
+- Port Events
+- Location
+- GraphQL
+created: '2026-07-12'
+modified: '2026-07-12'
+specificationVersion: '0.19'
+apis:
+- aid: spire-maritime:spire-maritime-vessels-api
+  name: Spire Maritime Vessels API
+  tags:
+  - Vessels
+  - AIS
+  - Ship Tracking
+  - GraphQL
+  image: https://kinlane-images.s3.amazonaws.com/shared/apis-json/apis-json-logo.jpg
+  humanURL: https://documentation.spire.com/maritime-2-0/
+  baseURL: https://api.spire.com/graphql
+  properties:
+  - url: https://documentation.spire.com/maritime-2-0/
+    type: Documentation
+  - url: https://documentation.spire.com/maritime-2-0/#graphql
+    type: APIReference
+  - url: graphql/spire-maritime.graphql
+    type: GraphQL
+  - url: collections/spire-maritime.postman_collection.json
+    type: PostmanCollection
+  - url: collections/spire-maritime.opencollection.json
+    type: OpenCollection
+  description: >-
+    GraphQL `vessels` query returning up to 1,000 vessels per page - static
+    data (name, MMSI, IMO, callsign, flag, shipType, dimensions), last position
+    update (lat/long, course, heading, speed, collectionType SATELLITE or
+    TERRESTRIAL), current voyage (destination, draught, ETA, matched port), and
+    extended vessel characteristics. Filter by MMSI/IMO/callsign/flag/shipType,
+    area of interest (GeoJSON/WKT polygon), or last-position time range;
+    cursor pagination via first/after.
+- aid: spire-maritime:spire-maritime-messages-api
+  name: Spire Maritime Messages API
+  tags:
+  - Messages
+  - AIS
+  - Historical AIS
+  - GraphQL
+  image: https://kinlane-images.s3.amazonaws.com/shared/apis-json/apis-json-logo.jpg
+  humanURL: https://documentation.spire.com/maritime-2-0/
+  baseURL: https://api.spire.com/graphql
+  properties:
+  - url: https://documentation.spire.com/maritime-2-0/
+    type: Documentation
+  - url: graphql/spire-maritime.graphql
+    type: GraphQL
+  description: >-
+    GraphQL query surface for decoded AIS messages (position and static/voyage
+    reports) filtered by MMSI and time window, returned in large paginated
+    batches. Used to pull recent and historical AIS message history over HTTPS
+    rather than the always-on TCP stream. Message-level field selection here is
+    representative and grounded in Spire's documented message model.
+- aid: spire-maritime:spire-maritime-port-events-api
+  name: Spire Maritime Port Events API
+  tags:
+  - Port Events
+  - Port Calls
+  - Maritime
+  - GraphQL
+  image: https://kinlane-images.s3.amazonaws.com/shared/apis-json/apis-json-logo.jpg
+  humanURL: https://documentation.spire.com/maritime-2-0/#port-events
+  baseURL: https://api.spire.com/graphql
+  properties:
+  - url: https://documentation.spire.com/maritime-2-0/#port-events
+    type: Documentation
+  - url: graphql/spire-maritime.graphql
+    type: GraphQL
+  description: >-
+    GraphQL port-event queries - `portEventsByVessel`, `portEventsByLocation`,
+    and `portEventsByShipType` - surfacing vessel arrivals and departures
+    (ATA/ATD), port calls, and berth/anchorage events with state filtering.
+    Backed by an improved event algorithm for more accurate arrival/departure
+    recognition.
+- aid: spire-maritime:spire-maritime-predicted-eta-api
+  name: Spire Maritime Predicted ETA / Routing API
+  tags:
+  - Predicted ETA
+  - Routing
+  - Voyage
+  - GraphQL
+  image: https://kinlane-images.s3.amazonaws.com/shared/apis-json/apis-json-logo.jpg
+  humanURL: https://documentation.spire.com/routing-api/
+  baseURL: https://api.spire.com/graphql
+  properties:
+  - url: https://documentation.spire.com/routing-api/
+    type: Documentation
+  - url: graphql/spire-maritime.graphql
+    type: GraphQL
+  description: >-
+    Predicted vessel routing and ETA - a `predictedVesselRoute` query taking an
+    origin, destination, and vessel and returning the predicted sea route,
+    distance, and estimated time of arrival / voyage duration. Complements the
+    self-reported AIS ETA in currentVoyage with a computed, ocean-network ETA.
+- aid: spire-maritime:spire-maritime-ais-tcp-stream
+  name: Spire Maritime AIS TCP Stream
+  tags:
+  - Real-Time Data
+  - Streaming
+  - AIS
+  - NMEA 0183
+  - TCP
+  image: https://kinlane-images.s3.amazonaws.com/shared/apis-json/apis-json-logo.jpg
+  humanURL: https://documentation.spire.com/tcp-stream-v2/using-the-tcp-stream/
+  baseURL: streamingv2.ais.spire.com:56784
+  properties:
+  - url: https://documentation.spire.com/tcp-stream-v2/using-the-tcp-stream/
+    type: Documentation
+  description: >-
+    Always-on real-time AIS feed delivered over a RAW TCP SOCKET (not HTTP, not
+    WebSocket). Client opens a TCP connection to streamingv2.ais.spire.com port
+    56784, authenticates with a token, and receives encoded AIS sentences in
+    NMEA 0183 v4.0 with a timestamp TAG-block prefix, one sentence per line. A
+    server-side cursor resumes the stream after brief disconnects. This is a
+    plain TCP transport - there is NO documented WebSocket (wss://) endpoint.
+common:
+- type: DomainSecurity
+  url: security/spire-maritime-domain-security.yml
+- type: Authentication
+  url: authentication/spire-maritime-authentication.yml
+- type: GitHubOrganization
+  url: https://github.com/spireglobal
+- type: LinkedIn
+  url: https://www.linkedin.com/company/spire-global
+- type: Website
+  url: https://spire.com/maritime/
+- type: Documentation
+  url: https://documentation.spire.com/
+- type: Plans
+  url: plans/spire-maritime-plans-pricing.yml
+- type: RateLimits
+  url: rate-limits/spire-maritime-rate-limits.yml
+- type: FinOps
+  url: finops/spire-maritime-finops.yml
+maintainers:
+- FN: Kin Lane
+  email: kin@apievangelist.com

@@ -1,0 +1,96 @@
+specification: FinOps Framework
+specificationVersion: '1.0'
+schema: https://www.finops.org/framework/
+provider: Spire Maritime
+providerId: spire-maritime
+created: '2026-07-12'
+modified: '2026-07-12'
+reconciled: false
+tags:
+- Vessel Tracking
+- AIS
+- Maritime
+- Satellite AIS
+- FinOps
+- Cost Management
+- FOCUS
+description: >-
+  FinOps view of Spire Maritime spend. Spire Maritime is sold via enterprise /
+  contact-sales agreements, not public usage-based rates, so cost is driven by
+  the licensed data products (vessels, messages, port events, predicted ETA,
+  historical extracts), the coverage (satellite + terrestrial AIS), the delivery
+  channels used (GraphQL API and/or the raw TCP AIS stream), and the contracted
+  request/throughput scope - typically a committed annual subscription rather
+  than metered per-call billing. No public per-unit prices are asserted here.
+notes: >-
+  No published rate card; all figures are contract-specific. Following Spire
+  Maritime's acquisition by Kpler, invoicing and commercial terms are handled
+  through Kpler. Reconcile against an actual Spire/Kpler agreement.
+sources:
+- https://spire.com/maritime/
+- https://documentation.spire.com/maritime-2-0/
+- https://focus.finops.org/focus-specification/v1-3/
+alignedWith:
+  framework: FinOps Foundation Framework
+  frameworkUrl: https://www.finops.org/framework/
+  dataSpec: FOCUS
+  dataSpecVersion: '1.3'
+  dataSpecUrl: https://focus.finops.org/focus-specification/v1-3/
+publisherName: Spire Global
+serviceCategory: Data and Analytics
+billingModel:
+  pricingCategory: Subscription-Based
+  billingFrequency: Annual
+  billingCurrency: USD
+  chargeCategories:
+  - Purchase
+  - Usage
+  - Adjustment
+focusColumns:
+  ServiceName: Spire Maritime
+  ServiceCategory: Data and Analytics
+  ProviderName: Spire Global
+  PublisherName: Spire Global
+  InvoiceIssuerName: Spire Global
+  BillingCurrency: USD
+  ChargeCategory: Purchase
+  PricingCategory: Subscription-Based
+meters:
+- name: data_subscription
+  description: Committed annual license to Spire Maritime data products (contract-defined scope). No public per-unit rate.
+  unit: contract
+  aggregation: sum
+  dimensions:
+  - account
+  - product
+- name: graphql_requests
+  description: Maritime 2.0 GraphQL requests (quota ~60 req/min per token); usage governed by agreement, not public per-call price.
+  unit: requests
+  aggregation: sum
+  dimensions:
+  - account
+  - token
+- name: stream_throughput
+  description: Real-time AIS messages delivered over the raw TCP stream; scoped by licensed coverage/throughput.
+  unit: messages
+  aggregation: sum
+  dimensions:
+  - account
+- name: historical_extracts
+  description: Custom historical AIS / events data extracts delivered as datasets.
+  unit: datasets
+  aggregation: sum
+  dimensions:
+  - account
+principles:
+- name: Visibility
+  description: Track which data products, coverage, and delivery channels are licensed; monitor GraphQL request volume via extensions.requestQuota.
+- name: Allocation
+  description: Map each Spire token / stream to a workload or team so the annual subscription cost allocates to internal cost centers.
+- name: Optimization
+  description: Query only required GraphQL fields to cut payload; scope AOI/time filters tightly; prefer the TCP stream for continuous needs and the GraphQL API for targeted lookups rather than duplicating both.
+- name: Accountability
+  description: Assign an owner for the Spire/Kpler agreement; review licensed scope vs. actual usage before each renewal.
+maintainers:
+- FN: Kin Lane
+  email: kin@apievangelist.com

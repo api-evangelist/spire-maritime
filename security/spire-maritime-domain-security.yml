@@ -1,0 +1,32 @@
+generated: '2026-07-12'
+method: probed
+source: live DNS/TLS/HTTP probes of apis.yml + GraphQL hosts
+hosts:
+- host: spire.com
+  https: true
+  tls_version: TLSv1.3
+  cert_expires: Sep 14 00:11:44 2026 GMT
+  hsts: false
+  hsts_note: No Strict-Transport-Security header returned on the root document at probe time.
+- host: api.spire.com
+  https: true
+  tls_version: TLSv1.3
+  cert_expires: Jun 18 21:22:32 2027 GMT
+  hsts: false
+  hsts_note: GraphQL host; no HSTS header observed on probe (GraphQL requires POST + auth).
+- host: documentation.spire.com
+  https: true
+  tls_version: TLSv1.3
+  cert_expires: Sep 13 08:52:42 2026 GMT
+  hsts: false
+  hsts_note: 301-redirects to servicedocs-sm.kpler.com following the Kpler acquisition.
+domains:
+- domain: spire.com
+  dnssec: false
+  caa: []
+  caa_note: No CAA records returned at probe time.
+  spf: true
+  spf_note: v=spf1 with multiple includes (Google, Office365, SendGrid, Mandrill, HubSpot, Zendesk) and ~all.
+  dmarc: true
+  dmarc_policy: none
+  dmarc_note: v=DMARC1; p=none; rua=mailto:dmarc-reports@spire.com

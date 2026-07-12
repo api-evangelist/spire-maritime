@@ -1,0 +1,126 @@
+aid: spire-maritime
+name: Spire Maritime
+review:
+  question: Does Spire Maritime expose a documented public WebSocket API?
+  answer: false
+  date: '2026-07-12'
+  reviewer: API Evangelist
+  asyncapiSpecCreated: false
+  asyncapiScopeNote: |
+    No AsyncAPI document was authored. Spire Maritime's real-time AIS delivery
+    is a RAW TCP SOCKET stream (NMEA 0183 sentences), not a WebSocket and not
+    HTTP Server-Sent Events. It is a plain byte stream over TCP with a custom
+    line protocol - there is no ws:// or wss:// URL, no HTTP upgrade handshake,
+    and no message/channel envelope to model as an AsyncAPI operation. Under the
+    current API Evangelist scope (SSE-over-HTTP is in-scope for AsyncAPI; raw
+    TCP line protocols are not), this transport is out of scope for an AsyncAPI
+    document. The request/response surfaces (Vessels, Messages, Port Events,
+    Predicted ETA) are GraphQL over HTTPS and are captured in
+    graphql/spire-maritime.graphql instead.
+findings:
+  summary: |
+    Spire Maritime does NOT publish a documented public WebSocket API. Its
+    flagship Maritime 2.0 service is GraphQL-first: a single HTTPS endpoint at
+    https://api.spire.com/graphql, authenticated with an Authorization: Bearer
+    <token> header, exposing vessels, messages, portEventsBy*, port, matchedPort,
+    and predicted-routing queries. Its real-time feed is a separate always-on
+    RAW TCP stream (streamingv2.ais.spire.com:56784) that emits AIS sentences in
+    NMEA 0183 v4.0 with a timestamp TAG-block prefix. Raw TCP is NOT WebSocket:
+    there is no HTTP Upgrade handshake, no ws://wss:// URL scheme, and no
+    WebSocket framing documented anywhere in Spire Maritime's TCP Stream v2,
+    Maritime 2.0, or Routing API documentation as of the review date.
+  webSocketPrecision: |
+    WebSocket precision applied deliberately. A "streaming" or "real-time" AIS
+    product is easy to misread as WebSocket. Spire's realtime transport is a
+    plain TCP socket (connect to host:port, send an auth token string, then read
+    newline-delimited NMEA sentences). That is a lower-level transport than
+    WebSocket - WebSocket runs an HTTP handshake and adds a framed message
+    protocol on top of TCP; Spire does neither. There is also a legacy/alternate
+    HTTPS "TCP-over-HTTP"/firehose style delivery and Kafka/connector
+    integrations, but none of those is a documented public WebSocket endpoint.
+    Therefore the WebSocket answer is false, review remains false, and no
+    asyncapi/ artifact was created.
+  acquisitionNote: |
+    Following Spire Maritime's acquisition by Kpler, Spire is discontinuing the
+    APIs and services described in its documentation; documentation.spire.com now
+    301-redirects to servicedocs-sm.kpler.com and the post-migration GraphQL
+    endpoint is https://api.sml.kpler.com/graphql (TCP stream migrating to
+    streaming.sml.kpler.com:25000). This catalog entry records the Spire-branded
+    surface (https://api.spire.com/graphql, streamingv2.ais.spire.com:56784) as
+    documented, and flags the migration honestly. Migration support: cs@kpler.com;
+    new integrations: developers.kpler.com.
+  transports:
+    - protocol: GraphQL over HTTPS
+      scheme: https
+      baseURL: https://api.spire.com/graphql
+      documented: true
+      note: Single Maritime 2.0 endpoint; Bearer token auth; POST GraphQL queries. Confirmed.
+    - protocol: Raw TCP stream
+      scheme: tcp
+      baseURL: streamingv2.ais.spire.com:56784
+      documented: true
+      note: >-
+        Always-on AIS feed. Open TCP socket, send auth token, read NMEA 0183 v4.0
+        sentences (TAG-block prefixed, LF-delimited). Server-side cursor resumes
+        after disconnect. NOT WebSocket, NOT SSE.
+    - protocol: WebSocket
+      scheme: wss
+      documented: false
+      note: >-
+        No WebSocket endpoint is documented in Spire Maritime's Maritime 2.0,
+        TCP Stream v2, or Routing API documentation as of the review date.
+  graphqlQueriesConfirmed:
+    - vessels(after,first,areaOfInterest,callsign,flag,imo,lastPositionUpdate,mmsi,name,shipType)
+    - portEventsByVessel
+    - portEventsByLocation
+    - portEventsByShipType
+    - port(unlocode)
+    - matchedPort(text)
+  graphqlQueriesModeled:
+    - messages(mmsi, receivedTime, first, after)
+    - predictedVesselRoute(origin, destination, vessel)
+  authentication:
+    scheme: bearer
+    header: 'Authorization: Bearer <token>'
+    note: Same token authenticates both the GraphQL endpoint and the TCP stream.
+  rateLimits:
+    graphql: up to 60 requests per minute per token; extensions.requestQuota reports limit/remaining
+  confirmedVsModeled: |
+    CONFIRMED (from Spire Maritime 2.0 docs + official spireglobal/maritime
+    Postman collection): GraphQL endpoint URL, Bearer auth, vessels query and its
+    filters, VesselStaticData / LastPositionUpdate / Voyage / VesselCharacteristics
+    field names, pageInfo/totalCount pagination, ShipType enum, port/matchedPort
+    and portEventsBy* queries, 60 req/min quota, and the raw-TCP NMEA stream
+    (host, port, format). MODELED / REPRESENTATIVE: the exact SDL of the messages
+    query and predictedVesselRoute query, PortEvent leaf fields, and custom scalar
+    definitions - documented in behavior but not published as full SDL by Spire.
+    Flagged in graphql/spire-maritime.graphql header and in apis.yml descriptions.
+sources:
+  - url: https://documentation.spire.com/maritime-2-0/
+    type: Documentation
+    note: Maritime 2.0 GraphQL overview - single endpoint api.spire.com/graphql, Bearer auth, vessels/port/portEvents queries, pagination, ShipType enum.
+  - url: https://documentation.spire.com/maritime-2-0/#graphql
+    type: APIReference
+    note: GraphQL query/type reference for vessels, staticData, lastPositionUpdate, currentVoyage, characteristics.
+  - url: https://github.com/spireglobal/maritime/blob/main/spire-graphql-postman-collection.json
+    type: PostmanCollection
+    note: Official Spire GraphQL Postman collection - 14 vessels/port query examples against https://api.spire.com/graphql with Bearer token.
+  - url: https://documentation.spire.com/tcp-stream-v2/using-the-tcp-stream/
+    type: Documentation
+    note: Raw TCP stream - streamingv2.ais.spire.com:56784, token auth, NMEA 0183 v4.0 with TAG block, LF-delimited. No WebSocket.
+  - url: https://documentation.spire.com/routing-api/
+    type: Documentation
+    note: Predicted Vessel Route / ETA - origin, destination, vessel inputs return predicted distance, route, and ETA.
+  - url: https://spire.com/press-release/spire-global-launches-maritime-2-0-a-milestone-data-services-update-supported-by-graphql/
+    type: PressRelease
+    note: Spire Maritime 2.0 launch - first satellite-AIS maritime data solution offered via GraphQL.
+actions:
+  asyncapiPath: null
+  apisYmlUpdated: true
+  reason: |
+    The WebSocket answer is false. Spire Maritime's own realtime transport is a
+    raw TCP line-protocol stream (NMEA 0183), not WebSocket and not SSE, so no
+    AsyncAPI document was created. The primary developer surface is GraphQL over
+    HTTPS, captured as an SDL in graphql/spire-maritime.graphql, with the TCP
+    stream documented as a distinct transport in apis.yml and modeled parts
+    flagged honestly.

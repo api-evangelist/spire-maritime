@@ -1,0 +1,204 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Spire Maritime 2.0 (GraphQL)",
+    "version": "2.0",
+    "description": "GraphQL requests against https://api.spire.com/graphql. Bearer token auth. Vessels/Port Events/Ports queries are grounded in Spire Maritime 2.0 docs and the official Postman collection; messages and predictedVesselRoute are representative. Real-time AIS is a separate raw TCP stream (streamingv2.ais.spire.com:56784), not modeled here."
+  },
+  "request": {
+    "auth": {
+      "type": "bearer",
+      "token": "{{spire_maritime_token}}"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Vessels",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Vessels by MMSI list",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.spire.com/graphql",
+            "headers": [
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "type": "graphql",
+              "graphql": {
+                "query": "query Vessels($mmsi: [MMSI!], $first: Int) { vessels(mmsi: $mmsi, first: $first) { pageInfo { hasNextPage endCursor } totalCount { relation value } nodes { id staticData { name mmsi imo callsign flag shipType dimensions { length width } } lastPositionUpdate { latitude longitude speed course heading collectionType timestamp } currentVoyage { destination draught eta matchedPort { port { name unlocode } } } } } }",
+                "variables": "{ \"mmsi\": [\"244660000\"], \"first\": 100 }"
+              }
+            }
+          },
+          "docs": "Retrieve vessels (static, position, voyage) by MMSI list. Up to 1000 per page; cursor paginate with first/after."
+        },
+        {
+          "info": {
+            "name": "Vessels in an area of interest",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.spire.com/graphql",
+            "headers": [
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "type": "graphql",
+              "graphql": {
+                "query": "query VesselsInAOI($aoi: AreaOfInterest, $shipType: [ShipType!], $first: Int) { vessels(areaOfInterest: $aoi, shipType: $shipType, first: $first) { pageInfo { hasNextPage endCursor } nodes { staticData { name mmsi shipType } lastPositionUpdate { latitude longitude timestamp collectionType } } } }",
+                "variables": "{ \"aoi\": { \"wkt\": \"POLYGON((-122.5 37.7,-122.3 37.7,-122.3 37.9,-122.5 37.9,-122.5 37.7))\" }, \"shipType\": [\"CONTAINER\"], \"first\": 1000 }"
+              }
+            }
+          },
+          "docs": "Last positions within a GeoJSON/WKT polygon, filtered by ship type."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Messages (representative)",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Recent AIS messages by MMSI + time range",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.spire.com/graphql",
+            "headers": [
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "type": "graphql",
+              "graphql": {
+                "query": "query Messages($mmsi: [MMSI!], $range: TimeRange, $first: Int) { messages(mmsi: $mmsi, receivedTime: $range, first: $first) { pageInfo { hasNextPage endCursor } nodes { mmsi msgType latitude longitude speed course timestamp collectionType } } }",
+                "variables": "{ \"mmsi\": [\"244660000\"], \"range\": { \"startTime\": \"2026-07-11T00:00:00Z\", \"endTime\": \"2026-07-12T00:00:00Z\" }, \"first\": 20000 }"
+              }
+            }
+          },
+          "docs": "Representative: paginated decoded AIS messages by MMSI + time window (up to ~20000 per page)."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Port Events",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Port events by vessel",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.spire.com/graphql",
+            "headers": [
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "type": "graphql",
+              "graphql": {
+                "query": "query PortEventsByVessel($mmsi: MMSI, $first: Int) { portEventsByVessel(mmsi: $mmsi, first: $first) { pageInfo { hasNextPage endCursor } nodes { id eventType timestamp port { name unlocode } } } }",
+                "variables": "{ \"mmsi\": \"244660000\", \"first\": 100 }"
+              }
+            }
+          },
+          "docs": "Arrivals/departures (ATA/ATD) and port calls for a vessel."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Ports",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Port by UNLOCODE",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.spire.com/graphql",
+            "headers": [
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "type": "graphql",
+              "graphql": {
+                "query": "query Port($unlocode: UNLOCODE!) { port(unlocode: $unlocode) { name unlocode centerPoint { latitude longitude } } }",
+                "variables": "{ \"unlocode\": \"DEHAM\" }"
+              }
+            }
+          },
+          "docs": "Look up a port by UNLOCODE."
+        },
+        {
+          "info": {
+            "name": "Match port by text",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.spire.com/graphql",
+            "headers": [
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "type": "graphql",
+              "graphql": {
+                "query": "query MatchedPort($text: String!) { matchedPort(text: $text) { matchScore port { name unlocode centerPoint { latitude longitude } } } }",
+                "variables": "{ \"text\": \"JEDDAH S ARABIA\" }"
+              }
+            }
+          },
+          "docs": "Resolve a free-text port name to a matched port with a score."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Predicted ETA / Routing (representative)",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Predicted vessel route",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.spire.com/graphql",
+            "headers": [
+              { "name": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "type": "graphql",
+              "graphql": {
+                "query": "query PredictedRoute($origin: RoutePoint!, $destination: RoutePoint!, $vessel: MMSI!) { predictedVesselRoute(origin: $origin, destination: $destination, vessel: $vessel) { distance eta durationHours route } }",
+                "variables": "{ \"origin\": { \"unlocode\": \"CNSHA\" }, \"destination\": { \"unlocode\": \"NLRTM\" }, \"vessel\": \"244660000\" }"
+              }
+            }
+          },
+          "docs": "Representative: predicted route, distance, and ETA between origin and destination for a vessel."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}
