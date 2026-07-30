@@ -11,7 +11,20 @@ description: >-
   delivery in NMEA 0183 format. Access is enterprise / contact-sales. NOTE -
   following Spire Maritime's acquisition by Kpler, these APIs are being
   migrated/discontinued; new integrations are directed to developers.kpler.com.
-image: https://kinlane-images.s3.amazonaws.com/shared/apis-json/apis-json-logo.jpg
+accessModel:
+  pricing: enterprise
+  onboarding: self-serve
+  trial: false
+  try_now: false
+  public: false
+  label: Enterprise · Self-serve signup
+  confidence: high
+  source:
+  - plans
+  - authentication
+  generated: '2026-07-22'
+  method: derived
+image: https://kinlane-images.s3.amazonaws.com/shared/apis-json/icons/spire-maritime.png
 tags:
 - Vessel Tracking
 - AIS
