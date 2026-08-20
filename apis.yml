@@ -73,6 +73,11 @@ apis:
 - aid: spire-maritime:spire-maritime-messages-api
   name: Spire Maritime Messages API
   tags:
+  - Message
+  - AIS
+  - Historical AIS
+  - GraphQL
+  tags_raw:
   - Messages
   - AIS
   - Historical AIS
