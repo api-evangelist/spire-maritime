@@ -11,6 +11,17 @@ description: >-
   delivery in NMEA 0183 format. Access is enterprise / contact-sales. NOTE -
   following Spire Maritime's acquisition by Kpler, these APIs are being
   migrated/discontinued; new integrations are directed to developers.kpler.com.
+deliveryModel:
+  model: saas
+  open_source: false
+  commercial: true
+  callable_host: false
+  label: Hosted service · you call their endpoint
+  confidence: medium
+  source:
+  - pricing
+  generated: '2026-08-28'
+  method: derived
 accessModel:
   pricing: enterprise
   onboarding: self-serve
